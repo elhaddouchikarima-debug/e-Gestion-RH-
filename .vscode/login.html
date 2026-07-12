@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion E-Gestion-RH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        .image-container {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center bg-gray-100 p-2 md:p-4 lg:p-6">
+        <div class="w-full max-w-7xl h-[96vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex">
+            <div class="hidden lg:flex lg:w-3/5 bg-indigo-600 items-center justify-center relative overflow-hidden image-container">
+                <!-- Dégradé de fond si l'image ne charge pas -->
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-indigo-800"></div>
+                <div class="absolute top-10 right-10 w-64 h-64 bg-indigo-400/20 rounded-full blur-2xl"></div>
+                <div class="absolute bottom-10 left-10 w-80 h-80 bg-indigo-400/20 rounded-full blur-2xl"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl"></div>
+                <div class="relative z-10 w-full h-full">
+                    <img src="images/logo.jpeg" alt="Logo E-Gestion-RH"  class="w-full h-full object-cover" />
+                </div>
+            </div>
+            <div class="w-full lg:w-2/5 flex items-center justify-center p-6 md:p-8 lg:p-10 bg-white overflow-y-auto">
+                <div class="w-full max-w-md">
+                    <div class="lg:hidden text-center mb-8">
+                        <h1 class="text-2xl font-bold text-slate-800">Bienvenue !</h1>
+                        <p class="text-slate-500 text-sm mt-1">Connectez-vous à votre espace</p>
+                    </div>
+                    <div class="hidden lg:block mb-8">
+                        <h1 class="text-3xl font-bold text-slate-800">Bienvenue !</h1>
+                        <p class="text-slate-500 text-sm mt-1">Connectez-vous à votre espace</p>
+                    </div>
+                    <form id="loginForm" class="space-y-5">
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                Nom d'utilisateur ou Email
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                                    <i class="fas fa-envelope text-sm"></i>
+                                </span>
+                                <input type="email" id="email" name="email"
+                                       class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50/80 transition"
+                                       placeholder="Ex: admin@example.com"
+                                       required />
+                            </div>
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                Mot de passe
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                                    <i class="fas fa-lock text-sm"></i>
+                                </span>
+                                <input type="password" id="password" name="password"
+                                       class="w-full pl-11 pr-12 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50/80 transition"
+                                       placeholder="••••••••••••••••"
+                                       required />
+                                <button type="button" id="togglePassword"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-slate-800 transition">
+                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 accent-indigo-600" />
+                                <span class="font-medium">Se souvenir de moi</span>
+                            </label>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-semibold transition">
+                                Mot de passe oublié ?
+                            </a>
+                        </div>
+                       <button type="submit"class="w-full bg-[#1a365d] hover:bg-[#0f2440] text-white font-bold py-3 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Se connecter
+                        </button>
+                        <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Identifiants incorrects</span>
+                        </div>
+                    </form>
+                    <p class="text-center text-xs text-slate-400 mt-6">
+                        © 2026 E-Gestion-RH - Tous droits réservés.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginError = document.getElementById('loginError');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                if (email === 'admin@egestionrh.com' && password === 'admin123') {
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('user', JSON.stringify({
+                        name: 'Administrateur',
+                        email: email
+                    }));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    loginError.classList.remove('hidden');
+                    setTimeout(() => {
+                        loginError.classList.add('hidden');
+                    }, 3000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
