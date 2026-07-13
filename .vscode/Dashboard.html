@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard · E-Gestion-RH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #1a365d 100%);
+        }
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-link.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.08);
+        }
+        .table-row:hover {
+            background: #f8fafc;
+        }
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .calendar-day {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            cursor: default;
+        }
+        .calendar-day.workday:hover {
+            background: #eef2ff;
+        }
+        .calendar-day.holiday {
+            background: #fee2e2;
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .calendar-day.weekend {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+        .calendar-day.today {
+            background: #4f46e5;
+            color: white;
+            font-weight: 700;
+        }
+        .calendar-day.other-month {
+            color: #cbd5e1;
+        }
+        .calendar-day.holiday.today {
+            border: 2px solid #4f46e5;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .task-item {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        .task-item:hover {
+            background: #f8fafc;
+        }
+        .task-item.completed {
+            opacity: 0.7;
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .task-checkbox:hover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        .task-checkbox.checked {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: white;
+        }
+        .task-checkbox.checked i {
+            display: block;
+        }
+        .task-checkbox i {
+            display: none;
+            font-size: 12px;
+        }
+
+        .task-input {
+            transition: all 0.2s ease;
+        }
+        .task-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+        .task-delete {
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .task-item:hover .task-delete {
+            opacity: 1;
+        }
+        .task-delete:hover {
+            color: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .empty-tasks {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .status-todo {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-done {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .profile-modal {
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .profile-avatar {
+            transition: all 0.3s ease;
+        }
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        .profile-overlay {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .profile-avatar-click {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .profile-avatar-click:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #4f46e5, 0 0 0 6px rgba(79, 70, 229, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="sidebar w-64 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">RH</div>
+                    <span class="text-xl font-bold text-white">E-Gestion-RH</span>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white">
+                    <i class="fas fa-chart-pie w-5 text-center"></i> Tableau de bord
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white">
+                    <i class="fas fa-users w-5 text-center"></i> Employés
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white">
+                    <i class="fas fa-calendar-alt w-5 text-center"></i> Congés
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white">
+                    <i class="fas fa-building w-5 text-center"></i> Départements
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white">
+                    <i class="fas fa-file-alt w-5 text-center"></i> Rapports
+                </a>
+                <hr class="my-4 border-white/10" />
+                <a href="#" onclick="logout()" class="sidebar-link flex items-center gap-3 px-4 py-3 text-white/50 hover:text-red-400 hover:bg-red-500/10">
+                    <i class="fas fa-sign-out-alt w-5 text-center"></i> Déconnexion
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10 text-xs text-white/40 text-center">© 2026 E-Gestion-RH</div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <button id="menuToggle" class="md:hidden text-slate-500 hover:text-slate-700 text-xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Tableau de bord</h2>
+                        <p class="text-sm text-slate-500">Bonjour, <span id="userName">Yassine</span> 👋</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="relative text-slate-500 hover:text-slate-700">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="openProfile()">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-medium text-slate-700" id="userNameDisplay">Yassine</p>
+                            <p class="text-xs text-slate-400">Administrateur</p>
+                        </div>
+                        <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold profile-avatar-click">
+                            Y
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-400">Employés</p>
+                                    <p class="text-3xl font-bold text-slate-800 mt-1" id="totalEmployees">128</p>
+                                </div>
+                                <span class="bg-emerald-50 text-emerald-600 text-xs font-semibold px-3 py-1 rounded-full flex items-center">
+                                    <i class="fas fa-arrow-up mr-1 text-[10px]"></i> +12
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2"><i class="far fa-user mr-1"></i> 18 nouveaux ce mois</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-400">Congés</p>
+                                    <p class="text-3xl font-bold text-slate-800 mt-1" id="totalLeaves">18</p>
+                                </div>
+                                <span class="bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 rounded-full">en cours</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2"><i class="fas fa-user-check mr-1 text-emerald-500"></i> <span id="presentToday">96</span> présents</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-400">Présence</p>
+                                    <p class="text-3xl font-bold text-slate-800 mt-1"><span id="attendanceRate">75</span><small class="text-lg font-medium text-slate-400">%</small></p>
+                                </div>
+                                <span class="bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full">actif</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2"><i class="fas fa-users mr-1"></i> Programme actif</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-400">Formations</p>
+                                    <p class="text-3xl font-bold text-slate-800 mt-1" id="totalTrainings">7</p>
+                                </div>
+                                <span class="bg-sky-50 text-sky-600 text-xs font-semibold px-3 py-1 rounded-full">planifiées</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2"><i class="fas fa-calendar mr-1"></i> Ce mois</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60">
+                            <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                <i class="fas fa-chart-pie text-indigo-400"></i> Répartition des employés par département
+                            </h3>
+                            <div class="space-y-4" id="departmentBars"></div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60">
+                            <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                <i class="fas fa-calendar-check text-indigo-400"></i> Absences vs Présences
+                            </h3>
+                            <canvas id="attendanceChart" height="200"></canvas>
+                            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex justify-between">
+                                <span><i class="fas fa-circle text-emerald-400 mr-1"></i> Présents : <span id="presentCount">96</span></span>
+                                <span><i class="fas fa-circle text-rose-400 mr-1"></i> Absents : <span id="absentCount">32</span></span>
+                                <span><i class="fas fa-circle text-amber-400 mr-1"></i> Congés : <span id="leaveCount">18</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between">
+                            <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-user-plus text-indigo-400"></i> Derniers employés ajoutés
+                            </h3>
+                            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition">
+                                Voir tout <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                            </a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-500 uppercase bg-slate-50/80">
+                                    <tr>
+                                        <th class="px-6 py-3 font-semibold">Nom</th>
+                                        <th class="px-6 py-3 font-semibold">Poste</th>
+                                        <th class="px-6 py-3 font-semibold">Département</th>
+                                        <th class="px-6 py-3 font-semibold">Date d'embauche</th>
+                                        <th class="px-6 py-3 font-semibold">Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fas fa-calendar-alt text-indigo-400"></i> <span id="calendarMonth">Juillet 2026</span>
+                                </h3>
+                                <div class="flex gap-1">
+                                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full hover:bg-slate-100 transition text-slate-400">
+                                        <i class="fas fa-chevron-left text-xs"></i>
+                                    </button>
+                                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full hover:bg-slate-100 transition text-slate-400">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500 mb-2">
+                                <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+                            </div>
+                            <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-sm"></div>
+                            <div class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-4">
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-full"></span> Jours fériés</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-gray-300 rounded-full"></span> Week-end</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-indigo-500 rounded-full"></span> Aujourd'hui</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fas fa-tasks text-indigo-400"></i> Tâches
+                                </h3>
+                                <span id="taskCount" class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0</span>
+                            </div>
+                            <div id="taskList" class="flex-1 space-y-2 mb-4 min-h-[200px] max-h-[300px] overflow-y-auto">
+                            </div>
+                            <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <input type="text" id="taskInput" 
+                                           placeholder="Ajouter une tâche..." 
+                                           class="task-input flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-indigo-500 transition"
+                                           onkeypress="if(event.key==='Enter') addTask()" />
+                                    <button onclick="addTask()" 
+                                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                                        <i class="fas fa-plus"></i> Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60">
+                            <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                <i class="fas fa-bullhorn text-indigo-400"></i> Annonces
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-indigo-300 pl-3">
+                                    <p class="text-sm font-medium text-slate-700">Réunion d'équipe</p>
+                                    <p class="text-xs text-slate-400">Lundi 14 Juillet à 10h00</p>
+                                </div>
+                                <div class="border-l-4 border-emerald-300 pl-3">
+                                    <p class="text-sm font-medium text-slate-700">Formation Leadership</p>
+                                    <p class="text-xs text-slate-400">Du 20 au 22 Juillet 2026</p>
+                                </div>
+                                <div class="border-l-4 border-amber-300 pl-3">
+                                    <p class="text-sm font-medium text-slate-700">Fête de l'Aid</p>
+                                    <p class="text-xs text-slate-400">Mercredi 17 Juillet (Jour férié)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="profileModal" class="fixed inset-0 z-50 hidden profile-overlay flex items-center justify-center p-4">
+        <div class="profile-modal bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="closeProfile()" 
+                    class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center">
+                <div class="profile-avatar w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-3xl mx-auto mb-4">
+                    Y
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800" id="profileName">Yassine El Amrani</h2>
+                <p class="text-indigo-600 font-medium" id="profileRole">Administrateur</p>
+                <p class="text-slate-400 text-sm mt-1" id="profileEmail">yassine@egestion-rh.com</p>
+            </div>
+            <hr class="my-6 border-slate-100" />
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
+                    <i class="fas fa-building text-indigo-400 w-5 text-center"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Département</p>
+                        <p class="text-sm font-medium text-slate-700" id="profileDept">Direction Générale</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
+                    <i class="fas fa-calendar-alt text-indigo-400 w-5 text-center"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Date d'embauche</p>
+                        <p class="text-sm font-medium text-slate-700" id="profileDate">01/01/2020</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
+                    <i class="fas fa-phone text-indigo-400 w-5 text-center"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Téléphone</p>
+                        <p class="text-sm font-medium text-slate-700" id="profilePhone">+212 6 12 34 56 78</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
+                    <i class="fas fa-map-marker-alt text-indigo-400 w-5 text-center"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Localisation</p>
+                        <p class="text-sm font-medium text-slate-700" id="profileLocation">Casablanca, Maroc</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <button onclick="closeProfile()" 
+                        class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition font-medium text-sm">
+                    Fermer
+                </button>
+                <button onclick="logout()" 
+                        class="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition font-medium text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="mobileMenu" class="fixed inset-0 bg-black/50 z-50 hidden md:hidden">
+        <div class="w-72 bg-slate-900 h-full p-6">
+            <button id="closeMenu" class="text-slate-400 hover:text-white text-xl mb-6">
+                <i class="fas fa-times"></i>
+            </button>
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-500/20 text-white font-medium">
+                    <i class="fas fa-chart-pie w-5 text-center"></i> Tableau de bord
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 transition">
+                    <i class="fas fa-users w-5 text-center"></i> Employés
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 transition">
+                    <i class="fas fa-calendar-alt w-5 text-center"></i> Congés
+                </a>
+                <a href="#" onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white/50 hover:bg-red-500/20 hover:text-red-400 transition">
+                    <i class="fas fa-sign-out-alt w-5 text-center"></i> Déconnexion
+                </a>
+            </nav>
+        </div>
+    </div>
+    <script>
+        const HOLIDAYS_API_BASE = 'https://tallyfy.com/national-holidays/api/MA/';
+        let fetchedHolidays = {};
+        let currentDate = new Date(2026, 6, 1);
+        const userProfile = {
+            name: 'Yassine El Amrani',
+            role: 'Administrateur',
+            email: 'yassine@egestion-rh.com',
+            department: 'Direction Générale',
+            hireDate: '01/01/2020',
+            phone: '+212 6 12 34 56 78',
+            location: 'Casablanca, Maroc',
+            initial: 'Y'
+        };
+        function openProfile() {
+            const modal = document.getElementById('profileModal');
+            modal.classList.remove('hidden');
+            document.getElementById('profileName').textContent = userProfile.name;
+            document.getElementById('profileRole').textContent = userProfile.role;
+            document.getElementById('profileEmail').textContent = userProfile.email;
+            document.getElementById('profileDept').textContent = userProfile.department;
+            document.getElementById('profileDate').textContent = userProfile.hireDate;
+            document.getElementById('profilePhone').textContent = userProfile.phone;
+            document.getElementById('profileLocation').textContent = userProfile.location;
+            document.querySelector('.profile-avatar').textContent = userProfile.initial;
+        }
+        function closeProfile() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+        document.getElementById('profileModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProfile();
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeProfile();
+            }
+        });
+        let tasks = [];
+        function loadTasks() {
+            const saved = localStorage.getItem('tasks');
+            if (saved) {
+                tasks = JSON.parse(saved);
+            } else {
+                tasks = [
+                    { id: 1, text: 'Valider les demandes de congés', completed: false },
+                    { id: 2, text: 'Évaluation annuelle des employés', completed: false },
+                    { id: 3, text: 'Rapport mensuel', completed: false }
+                ];
+            }
+            renderTasks();
+        }
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            const count = document.getElementById('taskCount');
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-tasks flex flex-col items-center justify-center h-32 text-slate-400">
+                        <i class="fas fa-check-circle text-3xl mb-2 text-slate-300"></i>
+                        <p class="text-sm">Aucune tâche</p>
+                        <p class="text-xs">Ajoutez une tâche ci-dessous</p>
+                    </div>
+                `;
+                count.textContent = '0';
+                return;
+            }
+            const completedCount = tasks.filter(t => t.completed).length;
+            count.textContent = `${completedCount}/${tasks.length}`;
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''} flex items-center gap-3 p-2.5 hover:bg-slate-50 transition">
+                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                         onclick="toggleTask(${task.id})">
+                        <i class="fas fa-check text-white"></i>
+                    </div>
+                    <span class="task-text flex-1 text-sm ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}">${task.text}</span>
+                    <span class="status-badge ${task.completed ? 'status-done' : 'status-todo'}">
+                        ${task.completed ? '✅ Faite' : '⏳ À faire'}
+                    </span>
+                    <button onclick="deleteTask(${task.id})" 
+                            class="task-delete text-slate-400 hover:text-red-500 transition p-1">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                completed: false
+            };
+            tasks.push(newTask);
+            saveTasks();
+            renderTasks();
+            input.value = '';
+            input.focus();
+        }
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks();
+                renderTasks();
+            }
+        }
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+        async function fetchHolidaysForYear(year) {
+            try {
+                const response = await fetch(`${HOLIDAYS_API_BASE}${year}.json`);
+                if (!response.ok) throw new Error('Erreur API');
+                const data = await response.json();
+                const holidays = {};
+                data.holidays.forEach(holiday => {
+                    holidays[holiday.date] = {
+                        name: holiday.name,
+                        local_name: holiday.local_name || holiday.name,
+                        type: holiday.type || 'national'
+                    };
+                });
+                return holidays;
+            } catch (error) {
+                console.warn(`Fallback pour ${year}`);
+                return {};
+            }
+        }
+        async function loadAllHolidays() {
+            const years = [2026, 2027, 2028, 2029, 2030];
+            const allHolidays = {};
+            for (const year of years) {
+                const holidays = await fetchHolidaysForYear(year);
+                Object.assign(allHolidays, holidays);
+            }
+            fetchedHolidays = allHolidays;
+            console.log(' Jours fériés chargés :', Object.keys(fetchedHolidays).length);
+            return fetchedHolidays;
+        }
+        const dashboardData = {
+            employees: {
+                total: 128,
+                departments: [
+                    { name: 'Administration', count: 32, percentage: 25 },
+                    { name: 'Technique', count: 28, percentage: 22 },
+                    { name: 'Financier', count: 24, percentage: 19 },
+                    { name: 'Ressources Humaines', count: 20, percentage: 16 },
+                    { name: 'Autres', count: 24, percentage: 18 }
+                ]
+            },
+            attendance: { present: 96, absent: 32, leave: 18, rate: 75 },
+            trainings: 7,
+            recentEmployees: [
+                { nom: 'Yassine El Amrani', poste: 'Développeur Senior', dept: 'Technique', date: '01/07/2026', statut: 'Actif' },
+                { nom: 'Fatima Zahra', poste: 'Assistante RH', dept: 'Ressources Humaines', date: '28/06/2026', statut: 'Actif' },
+                { nom: 'Mohamed Idrissi', poste: 'Comptable', dept: 'Financier', date: '25/06/2026', statut: 'Actif' },
+                { nom: 'Amina Berrada', poste: 'Chef de projet', dept: 'Technique', date: '20/06/2026', statut: 'Actif' },
+                { nom: 'Karim Benali', poste: 'Agent administratif', dept: 'Administration', date: '18/06/2026', statut: 'Actif' }
+            ]
+        };
+        function updateStats(data) {
+            document.getElementById('totalEmployees').textContent = data.employees.total;
+            document.getElementById('totalLeaves').textContent = data.attendance.leave;
+            document.getElementById('presentToday').textContent = data.attendance.present;
+            document.getElementById('attendanceRate').textContent = data.attendance.rate;
+            document.getElementById('totalTrainings').textContent = data.trainings;
+            document.getElementById('presentCount').textContent = data.attendance.present;
+            document.getElementById('absentCount').textContent = data.attendance.absent;
+            document.getElementById('leaveCount').textContent = data.attendance.leave;
+        }
+        function renderDepartments(departments) {
+            const container = document.getElementById('departmentBars');
+            const colors = ['#4f46e5', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899'];
+            container.innerHTML = departments.map((dept, index) => `
+                <div>
+                    <div class="flex justify-between text-sm">
+                        <span class="font-medium text-slate-700">${dept.name}</span>
+                        <span class="text-slate-500">${dept.count} (${dept.percentage}%)</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                        <div class="h-full rounded-full" style="width: ${dept.percentage}%; background: ${colors[index % colors.length]}"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function renderEmployees(employees) {
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = employees.map(emp => `
+                <tr class="border-b border-slate-100 table-row">
+                    <td class="px-6 py-3 font-medium text-slate-700">${emp.nom}</td>
+                    <td class="px-6 py-3">${emp.poste}</td>
+                    <td class="px-6 py-3">${emp.dept}</td>
+                    <td class="px-6 py-3">${emp.date}</td>
+                    <td class="px-6 py-3"><span class="badge-active px-2.5 py-0.5 rounded-full text-xs font-medium">${emp.statut}</span></td>
+                </tr>
+            `).join('');
+        }
+        function createAttendanceChart(attendance) {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Présents', 'Absents', 'Congés'],
+                    datasets: [{ data: [attendance.present, attendance.absent, attendance.leave], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'], borderWidth: 0 }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, cutout: '70%' }
+            });
+        }
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startDayOfWeek = firstDay.getDay() || 7;
+            const grid = document.getElementById('calendarGrid');
+            document.getElementById('calendarMonth').textContent =
+                `${['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][month]} ${year}`;
+            let html = '';
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startDayOfWeek - 1; i > 0; i--) {
+                html += `<span class="calendar-day other-month p-2 text-center">${prevMonthLastDay - i + 1}</span>`;
+            }
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dateObj = new Date(year, month, d);
+                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                const isHoliday = fetchedHolidays[dateStr];
+                const isToday = dateStr === todayStr;
+                let classes = 'calendar-day p-2 text-center';
+                if (isHoliday) classes += ' holiday';
+                else if (isWeekend) classes += ' weekend';
+                else classes += ' workday';
+                if (isToday) classes += ' today';
+                if (isHoliday && isToday) classes += ' holiday today';
+                const title = isHoliday ? `title="${isHoliday.name}"` : '';
+                html += `<span class="${classes}" ${title}>${d}</span>`;
+            }
+            const totalCells = startDayOfWeek - 1 + daysInMonth;
+            const remainingCells = 7 - (totalCells % 7);
+            if (remainingCells < 7) {
+                for (let d = 1; d <= remainingCells; d++) {
+                    html += `<span class="calendar-day other-month p-2 text-center">${d}</span>`;
+                }
+            }
+            grid.innerHTML = html;
+        }
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+        function setupMobileMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const closeMenu = document.getElementById('closeMenu');
+            if (menuToggle && mobileMenu) {
+                menuToggle.addEventListener('click', () => mobileMenu.classList.remove('hidden'));
+                closeMenu?.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+                mobileMenu.addEventListener('click', (e) => {
+                    if (e.target === mobileMenu) mobileMenu.classList.add('hidden');
+                });
+            }
+        }
+        function logout() {
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('user');
+        }
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!localStorage.getItem('isAuthenticated')) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await loadAllHolidays();
+            const data = dashboardData;
+            updateStats(data);
+            renderDepartments(data.employees.departments);
+            renderEmployees(data.recentEmployees);
+            createAttendanceChart(data.attendance);
+            renderCalendar();
+            const user = JSON.parse(localStorage.getItem('user') || '{"name":"Yassine"}');
+            document.getElementById('userName').textContent = user.name || 'Yassine';
+            document.getElementById('userNameDisplay').textContent = user.name || 'Yassine';
+            setupMobileMenu();
+            loadTasks();
+        });
+    </script>
+        
+</body>
+</html>
